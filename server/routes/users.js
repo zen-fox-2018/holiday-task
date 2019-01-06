@@ -3,10 +3,6 @@ const router = express.Router();
 const {UserController} = require('../controllers')
 const {checkToken} = require('../middlewares')
 
-
-router.post('/', UserController.registerUser)
-router.post('/login', UserController.loginUser)
-
 router.use(checkToken)
 router.get('/', UserController.findById)
 router.patch('/', UserController.patch)

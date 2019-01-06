@@ -37,7 +37,7 @@ function checkToken(req, res, next) {
 }
 
 function checkAdmin(req, res, next) {
-    let {role} = res.locals.role
+    let {role} = res.locals.payloads
     if (role === 'admin') {
         next()
     } else {

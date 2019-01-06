@@ -123,7 +123,7 @@ class UserController {
                         user.password = req.body.password
                         return user.save()
                     } else {
-                        return user.update(params)
+                        return user.updateOne(params, {runValidators: true})
                     }
                 }
             })
