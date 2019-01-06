@@ -5,8 +5,6 @@ const {User, Item, Transaction} = require('../models')
 
 class UserController {
     static registerUser(req, res, next){
-        console.log(req.body.name);
-        
         User.create({
             name: req.body.name,
             email: req.body.email,
