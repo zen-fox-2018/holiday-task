@@ -50,12 +50,12 @@ class ItemController {
     }
 
     static findAllReward(req, res) {
-        
+        let userPoints = 0
         User.findOne({
             _id: req.user._id
         }).then((userData) => {
             console.log(userData.point);
-            
+            userPoints = userData.point
             return Item.find({
                 minimumPoints: {
                     $lte: userData.point
@@ -63,7 +63,10 @@ class ItemController {
             })
         })
             .then((items) => {
-                res.json(items)
+                res.json({
+                    yourPoints: userPoints,
+                    items: items
+                })
             })
             .catch((err) => {
                 res.json(err)
