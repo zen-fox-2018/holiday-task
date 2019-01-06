@@ -9,6 +9,8 @@ var transactionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: `Item`
     }],
+    points: Number,
+    totalPrice: Number
 })
 
 var transaction = mongoose.model(`Transaction`, transactionSchema)

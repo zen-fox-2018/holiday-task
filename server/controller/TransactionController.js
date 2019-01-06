@@ -56,9 +56,43 @@ class TransactionController {
         })
             .populate(`cart`)
             .then((result) => {
-               
-            }).catch((err) => {
+                let totalPrice = 0
+                let points = 0
+                result.cart.forEach(element => {
+                    totalPrice += element.price
+                });
+                points = Math.round(totalPrice / 100000)
+                
+                if (totalPrice > 100000) {
+                    return Transaction.create({
+                        userId: req.user._id,
+                        items: result.cart,
+                        points: points,
+                        totalPrice: totalPrice
+                    })
+                } else {
+                    return Transaction.create({
+                        userId: req.user._id,
+                        items: result.cart,
+                        totalPrice: totalPrice
+                    })
+                }
 
+            })
+            .then((transactionResult) => {
+                res.send(transactionResult)
+                
+                return User.findOne({
+                    _id: `5c31c8d402c8e7765467cef2`
+                })
+            })
+            .then((userResult) => {
+                console.log(userResult, `=========`);
+                
+                res.send(userResult)
+            })
+            .catch((err) => {
+                res.json(err)
             });
     }
 
