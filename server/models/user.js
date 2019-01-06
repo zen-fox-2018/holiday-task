@@ -55,7 +55,7 @@ userSchema.pre('save', function(next) {
     var salt = bcrypt.genSaltSync(saltRounds)
     var hash = bcrypt.hashSync(this.password, salt)
     
-    if (this.name === 'admin') {
+    if (this.email === 'admin@mail.com') {
         this.role = admin;
     }
 

@@ -4,9 +4,9 @@ const {User} = require('../models')
 const jwt = require('jsonwebtoken')
 
 function checkToken(req, res, next) {
-    const headers = req.headers.token
-    if (headers) {
-        let payloads = jwt.verify(req.headers.token, process.env.JWT_SECRET)
+    const { token } = req.headers
+    if (token) {
+        let payloads = jwt.verify(token, process.env.JWT_SECRET)
         User.findById(payloads._id)
             .then((user) => {
                 if(user) {
