@@ -4,7 +4,10 @@ var userSchema = new mongoose.Schema({
     name: String,
     email: String,
     password: String,
-    point: Number,
+    point: {
+        type: Number,
+        default: 0
+    },
     cart: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: `Item`

@@ -38,7 +38,7 @@ class TransactionController {
             });
     }
 
-    static read(req, res) {
+    static readAll(req, res) {
         User.findOne({
             _id: req.user._id
         })
@@ -50,19 +50,30 @@ class TransactionController {
             });
     }
 
+    static readOne(req, res) {
+        Transaction.findOne({
+            _id: req.params.id
+        }).then((result) => {
+            res.json(result)
+        }).catch((err) => {
+            res.send(err)
+        });
+    }
+
     static checkout(req, res) {
+        let totalPrice = 0
+        let points = 0
         User.findById({
             _id: req.user._id
         })
             .populate(`cart`)
             .then((result) => {
-                let totalPrice = 0
-                let points = 0
+
                 result.cart.forEach(element => {
                     totalPrice += element.price
                 });
                 points = Math.round(totalPrice / 100000)
-                
+
                 if (totalPrice > 100000) {
                     return Transaction.create({
                         userId: req.user._id,
@@ -80,15 +91,14 @@ class TransactionController {
 
             })
             .then((transactionResult) => {
-                res.send(transactionResult)
-                
-                return User.findOne({
-                    _id: `5c31c8d402c8e7765467cef2`
-                })
+                return User.findOneAndUpdate({
+                    _id: req.user._id
+                }, {
+                        cart: [],
+                        point: points
+                    })
             })
             .then((userResult) => {
-                console.log(userResult, `=========`);
-                
                 res.send(userResult)
             })
             .catch((err) => {

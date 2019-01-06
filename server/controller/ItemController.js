@@ -1,4 +1,5 @@
 const Item = require(`../models/Item`)
+const User = require(`../models/User`)
 
 class ItemController {
     static findAll(req, res) {
@@ -46,6 +47,27 @@ class ItemController {
         }).catch((err) => {
             res.json(err)
         });
+    }
+
+    static findAllReward(req, res) {
+        
+        User.findOne({
+            _id: req.user._id
+        }).then((userData) => {
+            console.log(userData.point);
+            
+            return Item.find({
+                minimumPoints: {
+                    $lte: userData.point
+                }
+            })
+        })
+            .then((items) => {
+                res.json(items)
+            })
+            .catch((err) => {
+                res.json(err)
+            });
     }
 }
 

@@ -6,6 +6,7 @@ route.use(checkLogin)
 route.put(`/checkout`, TransactionController.checkout)
 route.post(`/cart`, TransactionController.addCart)
 route.delete(`/cart`, TransactionController.delete)
-route.get(`/`, TransactionController.read)
+route.get(`/`, TransactionController.readAll)
+route.get(`/:id`, TransactionController.readOne)
 
 module.exports = route
