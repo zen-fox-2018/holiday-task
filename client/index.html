@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Membership</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-sm-3">
+          <div v-if="login">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+              <li class="nav-item">
+                <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile"
+                role="tab" aria-controls="profile" aria-selected="false"
+                @click.prevent="getUser" @logout="logout" :edit="edit">Profile</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false" @click.prevent="getUser">Reward</a>
+              </li>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+              <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">...</div>
+              <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                <card-profile-component :data="user" @edit-method="editUser" @get-user-transactions="getUserTransactions" :transactions="historyTransactions" />
+              </div>
+              <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+                <list-reward-component :rewards="rewards" />
+              </div>
+            </div>              
+          </div>
+          <login-component v-else @login-method="loginMethod"/>
+        </div>
+        <div class="col-sm-4">
+          <list-product-component :products="products" @add-to-cart="addToCart" />
+        </div>
+        <div class="col-sm">
+          <cart-component :transactions="transactions" :cart="cart" :total="total" @create-transactions="createTransactions" />
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <template id="login-template">
+    <form @submit.prevent="loginMethod">
+      <div class="form-group">
+        <label for="exampleInputEmail1">Email address</label>
+        <input type="email" class="form-control" aria-describedby="emailHelp" placeholder="Enter email" v-model="email">
+        <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Password</label>
+        <input type="password" class="form-control" placeholder="Password" v-model="password">
+      </div>
+      <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="exampleCheck1">
+        <label class="form-check-label" for="exampleCheck1">Check me out</label>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  </template>
+  <template id="card-profile-template">
+    <div class="card">
+      <div v-if="!edit" class="card-body">
+        <h5>Name: {{data.name}} </h5>
+        <h5>Points: {{data.points}} </h5>
+        <button class="btn btn-primary" @click="logout">Logout</button>
+        <button class="btn btn-success" @click="editMethod">Edit</button>
+        <button class="btn btn-warning" @click="getUserTransactions">Transactions</button>
+      </div>
+      <div v-else class="card-body">
+        <form @submit.prevent="submitData">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" :placeholder="data.name" v-model="name">
+          </div>
+          <div class="form-group">
+            <label for="exampleInputEmail1">Email address</label>
+            <input type="email" class="form-control" :placeholder="data.email" v-model="email">
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+      </div>
+      <div v-if="listTransactions">
+        <h4>History Transactions</h4>
+        <table class="table">
+          <thead>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Qty</th>
+          </thead>
+          <tbody v-for="transaction in transactions">
+            <td> {{transaction.item.name}} </td>
+            <td> {{transaction.item.price}} </td>
+            <td> {{transaction.count}} </td>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </template>
+  <template id="list-reward-template">
+    <div class="card">
+      <div class="card-body">
+        <ol>
+          <li v-for="reward in rewards">
+            {{reward.name}}
+          </li>
+        </ol>
+      </div>
+    </div>
+  </template>
+  <template id="list-product-template">
+    <div>
+      <h2>Product</h2>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="product in products">
+            <th @click="buyMethod(product)"> {{product.name}} </th>
+            <th> {{product.price}} </th>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </template>
+  <template id="cart-template">
+    <div>
+      <div v-if="checkout">
+        <h2>Checkout</h2>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Qty</th>
+              <th>Price</th>
+              <th>Sub Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="product,i in transactions">
+              <td> {{transactions[i]}} </td>
+              <td> {{cart[transactions[i]].qty}} </td>
+              <td> {{cart[transactions[i]].price}} </td>
+              <td> {{cart[transactions[i]].price * cart[transactions[i]].qty}} </td>
+            </tr>
+            <tr v-if="total > 0">
+              <th> Total : </th>
+              <th></th>
+              <th></th>
+              <th> {{ total }} </th>
+            </tr>
+            <tr>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th><button class="btn btn-success" @click="createTransactions" v-if="total > 0">Confirm</button></th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-else>
+        <h2>Cart</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Qty</th>
+              <th>Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="product,i in transactions">
+              <td> {{transactions[i]}} </td>
+              <td> {{cart[transactions[i]].qty}} </td>
+              <td> {{cart[transactions[i]].price}} </td>
+            </tr>
+            <tr>
+              <th></th>
+              <th></th>
+              <th><button v-if="transactions.length > 0" class="btn btn-success" @click="checkoutMethod">Checkout</button></th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </template>
+  
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+  <script src="./component.js"></script>
+  <script>
+    let app = new Vue({
+        el: "#app",
+        data: {
+          login: false,
+          user: {},
+          edit: false,
+          products: [],
+          cart: {},
+          transactions: [],
+          historyTransactions: [],
+          total: 0,
+          rewards: []
+        },
+        methods: {
+          cekLogin() {
+            if (localStorage.getItem('access-token')) {
+              this.login = true
+              this.getUser()
+              return true
+            } else {
+              return false
+            }
+          },
+          logout() {
+            localStorage.removeItem('access-token')
+            this.cekLogin()
+          },
+          loginMethod(dataLogin) {
+            axios({
+              method: 'POST',
+              url: 'http://localhost:3000/users/login',
+              data: dataLogin
+            })
+              .then(({data}) => {
+                localStorage.setItem('access-token', data.token)
+                this.getUser()
+                this.login = true
+              })
+              .catch(err => {
+                alert(err)
+              })
+          },
+          getListProduct() {
+            axios({
+              method: 'GET',
+              url: 'http://localhost:3000/items',
+              headers: {
+                token: localStorage.getItem('access-token')
+              }
+            })
+              .then(({data}) => {
+                this.products = data
+              })
+              .catch(err => {
+                alert(err)
+              })
+          },
+          addToCart(product) {
+            if (this.cekLogin()) {
+              let index = Object.keys(this.cart).indexOf(product.name)
+              if (index > -1) {
+                this.cart[product.name].qty += 1
+              } else {
+                this.cart[product.name] = {
+                  id: product._id,
+                  qty: 1,
+                  price: product.price
+                }
+              }
+              this.transactions = Object.keys(this.cart)
+              let self = this
+              this.total = 0
+              this.transactions.forEach((e,i) => {
+                self.total += self.cart[e].qty * self.cart[e].price   
+              });
+            } else {
+              alert('Please login!')
+            }
+          },
+          createTransactions() {
+            axios({
+              method: 'POST', 
+              url: 'http://localhost:3000/transactions',
+              headers: {
+                token: localStorage.getItem('access-token')
+              },
+              data: {
+                cart: this.cart,
+                transactions: this.transactions
+              }
+            })
+              .then(response => {
+                let points = Math.floor(this.total/100000)
+                points += this.user.points
+                let params = {
+                  whitelist: ['points'],
+                  data: {
+                    points
+                  }
+                }
+                this.editUser(params)
+                this.transactions = []
+                this.cart = {}
+                this.total = 0
+              })
+              .catch(err => {
+                console.log(err)
+              })
+          },
+          editUser(params) {
+            axios({
+              method: 'PUT',
+              url: 'http://localhost:3000/users/edit',
+              headers: {
+                token: localStorage.getItem('access-token')
+              },
+              data: params
+            })
+              .then(({data}) => {
+                this.getUser()
+              })
+              .catch(err => {
+                alert(err)
+              })
+          },
+          getUser() {
+            axios({
+            method: 'GET',
+            url: 'http://localhost:3000/users/me',
+            headers: {
+              token: localStorage.getItem('access-token')
+            }
+          })
+            .then(({data}) => {
+              this.user = data
+              let myPoints = this.user.points * 10000
+              let myReward = this.products.filter(e => e.price < myPoints)
+              this.rewards = myReward
+            })
+            .catch(err => {
+              alert(err)
+            })
+          },
+          getUserTransactions() {
+            axios({
+            method: 'GET',
+            url: 'http://localhost:3000/transactions',
+            headers: {
+              token: localStorage.getItem('access-token')
+            }
+          })
+            .then(({data}) => {
+              this.historyTransactions = data
+            })
+            .catch(err => {
+              alert(err)
+            })
+          }
+        },
+        created() {
+          this.getListProduct()
+          this.cekLogin()
+        }
+    })
+  </script>
+</body>
+</html>
+
+<!--
+
+  ngerjain list transactions
+
+-->
